@@ -73,7 +73,19 @@ const startServer = async () => {
     // 2. Automatically ensure dynamic shows exist for today and upcoming dates
     await ensureShowsForCurrentDate();
 
-    // 3. Start HTTP server on all interfaces (IPv4/IPv6 compatible)
+    // 3. Attach error listener for port conflicts (EADDRINUSE)
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`\n🚨 [Server Startup Error]: Port ${PORT} (${HOST}) is already in use.`);
+        console.error(`👉 A CineVerse AI backend process is already running on port ${PORT}.`);
+        console.error(`👉 Check active processes with: Get-NetTCPConnection -LocalPort ${PORT}\n`);
+      } else {
+        console.error(`[Server Error]:`, err);
+      }
+      process.exit(1);
+    });
+
+    // 4. Start HTTP server on all interfaces (IPv4/IPv6 compatible)
     server.listen(PORT, HOST, () => {
       console.log(`=================================================`);
       console.log(`🎬 CineVerse AI Server listening on http://127.0.0.1:${PORT}`);
