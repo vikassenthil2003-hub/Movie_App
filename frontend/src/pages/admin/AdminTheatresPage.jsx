@@ -304,7 +304,8 @@ const AdminTheatresPage = () => {
       }
       // Refresh duplicate scan
       const res = await api.get('/admin/theatres/duplicates');
-      setDuplicateClusters(res.data?.data?.clusters || []);
+      const refreshedData = res.data?.data || res.data;
+      setDuplicateClusters(refreshedData?.clusters || []);
       fetchTheatres();
       fetchCoverageStats();
     } catch (err) {

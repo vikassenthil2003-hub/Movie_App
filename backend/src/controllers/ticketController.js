@@ -102,16 +102,27 @@ const getTicket = async (req, res, next) => {
  */
 const verifyTicket = async (req, res, next) => {
   try {
-    const { bookingReference, ticketToken } = req.body;
+    let { bookingReference, ticketToken, verificationSecret, qrData } = req.body;
+    if (qrData) {
+      try {
+        const parsed = typeof qrData === 'string' ? JSON.parse(qrData) : qrData;
+        bookingReference = bookingReference || parsed.bookingReference || parsed.ref;
+        ticketToken = ticketToken || parsed.ticketToken || parsed.tok || parsed.verificationSecret;
+      } catch (e) {
+        // Fall back to treating qrData as raw booking reference
+        bookingReference = bookingReference || qrData.toString().trim();
+      }
+    }
+    const token = (ticketToken || verificationSecret || '').toString().trim();
     const staffUser = req.user;
 
-    if (!bookingReference && !ticketToken) {
+    if (!bookingReference && !token) {
       return errorResponse(res, 'Please provide booking reference or QR ticket token', 400);
     }
 
     const query = {};
     if (bookingReference) query.bookingReference = bookingReference.toUpperCase().trim();
-    if (ticketToken) query.ticketToken = ticketToken.trim();
+    if (token) query.ticketToken = token;
 
     const booking = await Booking.findOne(query)
       .populate('movieId', 'title duration certification')
@@ -198,7 +209,9 @@ const verifyTicket = async (req, res, next) => {
       screenName: booking.screenId.name,
       showDate: booking.showId.date,
       showTime: booking.showId.startTime,
+      startTime: booking.showId.startTime,
       seatNumbers: booking.seats.map((s) => s.seatNumber),
+      seats: booking.seats.map((s) => s.seatNumber),
       customerName: booking.userId?.name || 'Customer',
       admittedAt: booking.admittedAt,
     });

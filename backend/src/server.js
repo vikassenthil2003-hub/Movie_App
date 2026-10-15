@@ -31,6 +31,8 @@ const allowedOrigins = Array.from(
     'http://127.0.0.1:5173',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
   ])
 );
 
@@ -39,14 +41,15 @@ const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      const isConfigured = allowedOrigins.includes(origin);
+      const cleanOrigin = origin.replace(/\/$/, '');
+      const isConfigured = allowedOrigins.includes(cleanOrigin);
       const isLocalDev =
         process.env.NODE_ENV !== 'production' &&
-        (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'));
+        (cleanOrigin.startsWith('http://localhost:') || cleanOrigin.startsWith('http://127.0.0.1:'));
       if (isConfigured || isLocalDev) {
         return callback(null, true);
       }
-      return callback(new Error(`Socket.IO CORS blocked: Origin '${origin}' is not authorized.`));
+      return callback(null, false);
     },
     methods: ['GET', 'POST'],
     credentials: true,

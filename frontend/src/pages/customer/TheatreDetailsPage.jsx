@@ -43,8 +43,9 @@ const TheatreDetailsPage = () => {
         setTheatre(thData);
         setShows(shData);
         setTodayShowsEnded(Boolean(showsRes.data?.data?.todayShowsEnded || showsRes.data?.todayShowsEnded));
-        if (showsRes.data?.data?.serverDate) {
-          setServerDate(showsRes.data.data.serverDate);
+        const serverDateVal = showsRes.data?.data?.serverDate || showsRes.data?.serverDate;
+        if (serverDateVal) {
+          setServerDate(serverDateVal);
         }
       } catch (err) {
         console.error('[Theatre Details Error]:', err);

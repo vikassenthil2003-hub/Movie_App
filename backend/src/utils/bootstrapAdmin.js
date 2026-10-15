@@ -124,8 +124,19 @@ const ensureDemoTheatreExists = async () => {
     let existingTheatreUser = await User.findOne({ email: theatreEmail });
 
     if (existingTheatreUser) {
+      let needsSave = false;
       if (existingTheatreUser.role !== 'theatre') {
         existingTheatreUser.role = 'theatre';
+        needsSave = true;
+      }
+      if (!existingTheatreUser.assignedTheatre) {
+        const firstTheatre = await Theatre.findOne();
+        if (firstTheatre) {
+          existingTheatreUser.assignedTheatre = firstTheatre._id;
+          needsSave = true;
+        }
+      }
+      if (needsSave) {
         await existingTheatreUser.save();
       }
       return existingTheatreUser;

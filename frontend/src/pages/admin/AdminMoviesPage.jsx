@@ -62,7 +62,7 @@ const AdminMoviesPage = () => {
         language: formData.languages,
         forceLiveSearch: true,
       });
-      const result = res.data?.data?.searchResult;
+      const result = res.data?.searchResult || res.data?.data?.searchResult || res?.searchResult;
       setAutoTrailerResult(result);
       if (result && result.success && result.trailerUrl) {
         setFormData((prev) => ({ ...prev, trailerUrl: result.trailerUrl }));

@@ -126,7 +126,8 @@ const login = async (req, res, next) => {
       );
     }
 
-    const { email, password, loginMode = 'user' } = req.body;
+    const { email, password } = req.body;
+    const loginMode = req.body.loginMode || req.body.mode || 'user';
 
     const trimmedEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
     const trimmedPassword = typeof password === 'string' ? password : '';

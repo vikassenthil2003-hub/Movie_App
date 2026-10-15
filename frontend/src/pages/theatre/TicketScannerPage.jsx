@@ -34,9 +34,9 @@ const TicketScannerPage = () => {
 
       try {
         const parsed = JSON.parse(inputCode);
-        if (parsed.bookingReference) {
-          bookingReference = parsed.bookingReference;
-          verificationSecret = parsed.verificationSecret || '';
+        if (parsed.bookingReference || parsed.ref) {
+          bookingReference = parsed.bookingReference || parsed.ref;
+          verificationSecret = parsed.verificationSecret || parsed.tok || parsed.ticketToken || '';
         }
       } catch (ignored) {
         // Raw string format
@@ -44,12 +44,15 @@ const TicketScannerPage = () => {
 
       const res = await api.post('/tickets/verify', {
         bookingReference,
+        ticketToken: verificationSecret,
         verificationSecret,
       });
 
+      const outcomeData = res?.data?.data || res?.data || res;
+
       const outcome = {
         success: true,
-        data: res.data.data,
+        data: outcomeData,
         timestamp: new Date().toLocaleTimeString(),
       };
 
@@ -59,8 +62,8 @@ const TicketScannerPage = () => {
     } catch (err) {
       const outcome = {
         success: false,
-        error: err.response?.data?.message || 'Verification failed. Invalid ticket.',
-        data: err.response?.data?.data || null,
+        error: err.message || err.response?.data?.message || 'Verification failed. Invalid ticket.',
+        data: err.response?.data?.data || err.data || null,
         timestamp: new Date().toLocaleTimeString(),
       };
       setVerificationResult(outcome);

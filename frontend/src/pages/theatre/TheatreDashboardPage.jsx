@@ -13,9 +13,11 @@ const TheatreDashboardPage = () => {
       setLoading(true);
       try {
         const res = await api.get('/theatre/dashboard');
-        setData(res.data.data);
+        const raw = res?.data !== undefined ? res.data : res;
+        const dataObj = raw?.theatre ? raw : (raw?.data?.theatre ? raw.data : (raw?.data || raw));
+        setData(dataObj);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to fetch theatre dashboard');
+        setError(err.message || err.response?.data?.message || 'Failed to fetch theatre dashboard');
       } finally {
         setLoading(false);
       }

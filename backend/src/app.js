@@ -26,6 +26,8 @@ const defaultAllowedOrigins = [
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
 ];
 
 const allowedOrigins = Array.from(new Set([...configuredOrigins, ...defaultAllowedOrigins]));
@@ -38,19 +40,20 @@ app.use(
         return callback(null, true);
       }
 
-      const isConfigured = allowedOrigins.includes(origin);
+      const cleanOrigin = origin.replace(/\/$/, '');
+      const isConfigured = allowedOrigins.includes(cleanOrigin);
       const isLocalDev =
         process.env.NODE_ENV !== 'production' &&
-        (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'));
+        (cleanOrigin.startsWith('http://localhost:') || cleanOrigin.startsWith('http://127.0.0.1:'));
 
       if (isConfigured || isLocalDev) {
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS blocked: Origin '${origin}' is not authorized.`));
+      return callback(null, false);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
