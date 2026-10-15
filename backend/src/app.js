@@ -66,6 +66,28 @@ app.get(['/health', '/api/health'], (req, res) => {
   });
 });
 
+// Root and API index endpoints (prevents 404 when navigating to http://localhost:5000 in browser)
+app.get(['/', '/api', '/api/v1'], (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: '🎬 CineVerse AI Backend API is active and operational!',
+    version: '1.0.0',
+    status: 'healthy',
+    frontendUrl: 'http://localhost:5173 (Run: npm run dev:frontend)',
+    endpoints: {
+      health: '/api/v1/health',
+      movies: '/api/v1/movies',
+      theatres: '/api/v1/theatres',
+      shows: '/api/v1/shows',
+      snacks: '/api/v1/snacks',
+      trailers: '/api/v1/trailers',
+      coupons: '/api/v1/coupons/active',
+      location: '/api/v1/location/districts',
+      auth: '/api/v1/auth/login',
+    },
+  });
+});
+
 // Mount main API router under versioned and standard endpoints
 app.use('/api/v1', routes);
 app.use('/api', routes);
