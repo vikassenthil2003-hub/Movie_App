@@ -111,9 +111,10 @@ async function runComprehensiveTests() {
 
     // TEST 6: Showtime and Screen Linking
     console.log('\n[Test 6] Testing Showtime Linking & Dynamic Dates...');
+    const { getLocalDateString } = require('../utils/dateUtils');
+    const today = getLocalDateString(0);
     const aTheatreWithShows = await Theatre.findOne({ name: 'Rohini Silver Screens' });
     if (aTheatreWithShows) {
-      const today = new Date().toISOString().split('T')[0];
       const showRes = await fetch(`${baseUrl}/shows?theatreId=${aTheatreWithShows._id}&date=${today}`);
       const showJson = await showRes.json();
       const shows = showJson.data?.shows || (Array.isArray(showJson.data) ? showJson.data : []);
@@ -126,7 +127,6 @@ async function runComprehensiveTests() {
     // Test empty state for theatre without shows
     const importedTheatre = await Theatre.findOne({ verificationStatus: 'unverified' });
     if (importedTheatre) {
-      const today = new Date().toISOString().split('T')[0];
       const showRes = await fetch(`${baseUrl}/shows?theatreId=${importedTheatre._id}&date=${today}`);
       const showJson = await showRes.json();
       const shows = showJson.data?.shows || (Array.isArray(showJson.data) ? showJson.data : []);

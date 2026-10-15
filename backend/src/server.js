@@ -18,10 +18,36 @@ const HOST = process.env.HOST || '0.0.0.0';
 // Create HTTP server
 const server = http.createServer(app);
 
+// Socket.IO CORS configuration - Restrict to trusted frontend origins
+const configuredOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(
+  new Set([
+    ...configuredOrigins,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ])
+);
+
 // Initialize Socket.IO with CORS and robust ping/pong intervals
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const isConfigured = allowedOrigins.includes(origin);
+      const isLocalDev =
+        process.env.NODE_ENV !== 'production' &&
+        (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'));
+      if (isConfigured || isLocalDev) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Socket.IO CORS blocked: Origin '${origin}' is not authorized.`));
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },

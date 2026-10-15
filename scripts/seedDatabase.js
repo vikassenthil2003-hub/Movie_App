@@ -1,13 +1,44 @@
-require('../backend/node_modules/dotenv').config({ path: './backend/.env' });
-const mongoose = require('../backend/node_modules/mongoose');
-const Movie = require('../backend/src/models/Movie');
-const Theatre = require('../backend/src/models/Theatre');
-const Screen = require('../backend/src/models/Screen');
-const Show = require('../backend/src/models/Show');
-const Coupon = require('../backend/src/models/Coupon');
-const User = require('../backend/src/models/User');
+const path = require('path');
+const fs = require('fs');
 
-const { getLocalDateString } = require('../backend/src/utils/dateUtils');
+// 1. Resolve and load .env safely
+const potentialEnvPaths = [
+  path.resolve(__dirname, '../backend/.env'),
+  path.resolve(__dirname, './backend/.env'),
+  path.resolve(process.cwd(), 'backend/.env'),
+  path.resolve(process.cwd(), '.env'),
+];
+
+for (const envPath of potentialEnvPaths) {
+  if (fs.existsSync(envPath)) {
+    try {
+      const dotenvModule = require(path.resolve(__dirname, '../backend/node_modules/dotenv'));
+      dotenvModule.config({ path: envPath });
+    } catch {
+      try {
+        require('dotenv').config({ path: envPath });
+      } catch (err) {}
+    }
+    break;
+  }
+}
+
+// 2. Resolve mongoose safely
+let mongoose;
+try {
+  mongoose = require(path.resolve(__dirname, '../backend/node_modules/mongoose'));
+} catch {
+  mongoose = require('mongoose');
+}
+
+const Movie = require(path.resolve(__dirname, '../backend/src/models/Movie'));
+const Theatre = require(path.resolve(__dirname, '../backend/src/models/Theatre'));
+const Screen = require(path.resolve(__dirname, '../backend/src/models/Screen'));
+const Show = require(path.resolve(__dirname, '../backend/src/models/Show'));
+const Coupon = require(path.resolve(__dirname, '../backend/src/models/Coupon'));
+const User = require(path.resolve(__dirname, '../backend/src/models/User'));
+
+const { getLocalDateString } = require(path.resolve(__dirname, '../backend/src/utils/dateUtils'));
 
 const seedDatabase = async () => {
   try {
@@ -639,6 +670,17 @@ const seedDatabase = async () => {
 
     const insertedCoupons = await Coupon.insertMany(couponsData);
     console.log(`[Seed] Inserted ${insertedCoupons.length} coupons.`);
+
+    // 8. Synchronize 38-district Tamil Nadu Theatre Directory
+    try {
+      console.log('[Seed] Synchronizing 38-district Tamil Nadu theatre directory...');
+      const theatreImportService = require(path.resolve(__dirname, '../backend/src/services/theatreImportService'));
+      await theatreImportService.importCuratedTheatres();
+      const totalTheatres = await Theatre.countDocuments();
+      console.log(`[Seed] Total verified theatres in system: ${totalTheatres}`);
+    } catch (e) {
+      console.warn('[Seed] Notice on directory sync:', e.message);
+    }
 
     console.log('====================================================');
     console.log('🎉 CineVerse AI Database Seed Completed Successfully!');

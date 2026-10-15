@@ -3,6 +3,7 @@ const Show = require('../models/Show');
 const Booking = require('../models/Booking');
 const AuditEvent = require('../models/AuditEvent');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
+const { getLocalDateString } = require('../utils/dateUtils');
 
 /**
  * Get Theatre Dashboard Overview
@@ -33,7 +34,7 @@ const getTheatreOverview = async (req, res, next) => {
     }
 
     // Today's shows for this theatre
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateString(0);
     const todayShows = await Show.find({ theatreId, date: todayStr })
       .populate('movieId', 'title posterUrl duration')
       .populate('screenId', 'name totalCapacity');

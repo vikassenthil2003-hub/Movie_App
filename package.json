@@ -13,7 +13,12 @@
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "test:backend": "npm run test --prefix backend",
-    "build:frontend": "npm run build --prefix frontend"
+    "build:frontend": "npm run build --prefix frontend",
+    "test": "npm run test:backend",
+    "build": "npm run build:frontend",
+    "seed:tn": "node backend/src/scripts/seedTamilNaduTheatres.js",
+    "test:tn": "node backend/src/scripts/comprehensiveTamilNaduTest.js",
+    "test:permissions": "node backend/src/scripts/testPermissionsAndWorkflows.js"
   },
   "keywords": ["mern", "movie-booking", "cineverse", "ai", "leaflet", "socket.io"],
   "author": "CineVerse AI Team",

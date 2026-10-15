@@ -25,28 +25,30 @@ const LoginPage = () => {
     setError('');
   };
 
-  // Demo credentials loaded from local environment configuration
-  const demoCredentials = {
+  // In development mode only, provide non-privileged demo login helpers
+  const isDev = import.meta.env.DEV;
+
+  const demoAccounts = {
     user: {
       email: import.meta.env.VITE_DEMO_CUSTOMER_EMAIL || 'customer@cineverse.com',
-      password: import.meta.env.VITE_DEMO_CUSTOMER_PASSWORD || 'Customer@CineVerse2026',
+      password: isDev ? 'Customer@CineVerse2026' : '',
     },
     admin: {
       email: import.meta.env.VITE_DEMO_ADMIN_EMAIL || 'admin@cineverse.com',
-      password: import.meta.env.VITE_DEMO_ADMIN_PASSWORD || 'Admin@CineVerse2026',
+      password: '', // Privileged admin password must never be exposed in client code
     },
     theatre: {
       email: import.meta.env.VITE_DEMO_THEATRE_EMAIL || 'theatre@cineverse.com',
-      password: import.meta.env.VITE_DEMO_THEATRE_PASSWORD || 'Theatre@CineVerse2026',
+      password: '', // Privileged theatre password must never be exposed in client code
     },
   };
 
   const handleDemoFill = (mode) => {
     setLoginMode(mode);
-    const creds = demoCredentials[mode];
+    const creds = demoAccounts[mode];
     if (creds) {
       setEmail(creds.email);
-      setPassword(creds.password);
+      setPassword(creds.password || '');
     }
     setError('');
   };
@@ -273,33 +275,35 @@ const LoginPage = () => {
             </button>
           </form>
 
-          {/* Quick Demo Credentials Assistant */}
-          <div className="mt-6 pt-5 border-t border-navy-800/80">
-            <p className="text-[11px] text-navy-400 mb-2 font-medium">Quick Demo Login Helpers:</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => handleDemoFill('user')}
-                className="px-2.5 py-1 text-[11px] bg-violet-500/10 border border-violet-500/30 text-violet-300 rounded-lg hover:bg-violet-500/20 transition flex items-center gap-1 cursor-pointer"
-              >
-                <User className="w-3 h-3" /> Fill Customer
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoFill('admin')}
-                className="px-2.5 py-1 text-[11px] bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 rounded-lg hover:bg-indigo-500/20 transition flex items-center gap-1 cursor-pointer"
-              >
-                <Shield className="w-3 h-3" /> Fill Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoFill('theatre')}
-                className="px-2.5 py-1 text-[11px] bg-teal-500/10 border border-teal-500/30 text-teal-300 rounded-lg hover:bg-teal-500/20 transition flex items-center gap-1 cursor-pointer"
-              >
-                <Building2 className="w-3 h-3" /> Fill Theatre
-              </button>
+          {/* Quick Demo Credentials Assistant (Development only) */}
+          {isDev && (
+            <div className="mt-6 pt-5 border-t border-navy-800/80">
+              <p className="text-[11px] text-navy-400 mb-2 font-medium">Quick Demo Login Helpers (Dev Mode):</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDemoFill('user')}
+                  className="px-2.5 py-1 text-[11px] bg-violet-500/10 border border-violet-500/30 text-violet-300 rounded-lg hover:bg-violet-500/20 transition flex items-center gap-1 cursor-pointer"
+                >
+                  <User className="w-3 h-3" /> Fill Customer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoFill('admin')}
+                  className="px-2.5 py-1 text-[11px] bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 rounded-lg hover:bg-indigo-500/20 transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Shield className="w-3 h-3" /> Fill Admin Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoFill('theatre')}
+                  className="px-2.5 py-1 text-[11px] bg-teal-500/10 border border-teal-500/30 text-teal-300 rounded-lg hover:bg-teal-500/20 transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Building2 className="w-3 h-3" /> Fill Theatre Email
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Registration Footer */}
           <div className="mt-6 text-center text-xs text-navy-400">

@@ -69,10 +69,14 @@ async function testPermissionsAndWorkflows() {
 
     // TEST C: Admin attempts to book a movie ticket
     console.log('[Test C] Admin attempting to book movie ticket (POST /bookings)...');
-    const today = new Date().toISOString().split('T')[0];
-    const aShow = await Show.findOne({ date: today, status: 'scheduled' });
+    const { getLocalDateString } = require('../utils/dateUtils');
+    const today = getLocalDateString(0);
+    let aShow = await Show.findOne({ date: { $gte: today }, status: 'scheduled' });
     if (!aShow) {
-      throw new Error('No scheduled show found for today to test booking restriction');
+      aShow = await Show.findOne({ status: 'scheduled' });
+    }
+    if (!aShow) {
+      throw new Error('No scheduled show found to test booking restriction');
     }
 
     const adminBookingRes = await fetch(`${baseUrl}/bookings`, {
@@ -120,11 +124,8 @@ async function testPermissionsAndWorkflows() {
 
     // TEST E: Verify dynamic date coverage (Today, Tomorrow, Future)
     console.log('[Test E] Verifying dynamic date showtimes across Tamil Nadu...');
-    const d0 = new Date();
-    const d1 = new Date();
-    d1.setDate(d1.getDate() + 1);
-    const dateToday = d0.toISOString().split('T')[0];
-    const dateTomorrow = d1.toISOString().split('T')[0];
+    const dateToday = getLocalDateString(0);
+    const dateTomorrow = getLocalDateString(1);
 
     const todayShowsCount = await Show.countDocuments({ date: dateToday });
     const tomorrowShowsCount = await Show.countDocuments({ date: dateTomorrow });

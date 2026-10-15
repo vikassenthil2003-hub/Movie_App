@@ -1,6 +1,7 @@
 const Movie = require('../models/Movie');
 const Theatre = require('../models/Theatre');
 const Show = require('../models/Show');
+const { getLocalDateString } = require('../utils/dateUtils');
 
 // Calculate distance utility
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -27,10 +28,8 @@ const ruleBasedAssistant = async (queryText, userContext = {}) => {
   const userLat = userContext.lat ? parseFloat(userContext.lat) : null;
   const userLng = userContext.lng ? parseFloat(userContext.lng) : null;
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  const todayStr = getLocalDateString(0);
+  const tomorrowStr = getLocalDateString(1);
 
   // 1. Language detection
   const detectedLanguages = [];

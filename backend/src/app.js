@@ -15,24 +15,39 @@ app.use(
   })
 );
 
-// CORS configuration
-const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
+// CORS configuration - Strictly restrict to configured trusted frontend origins
+const configuredOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const defaultAllowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
 ];
 
+const allowedOrigins = Array.from(new Set([...configuredOrigins, ...defaultAllowedOrigins]));
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, or server-to-server)
-      if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Permissive in dev
+      // Allow requests with no origin (e.g. mobile apps, curl, or server-to-server)
+      if (!origin) {
+        return callback(null, true);
       }
+
+      const isConfigured = allowedOrigins.includes(origin);
+      const isLocalDev =
+        process.env.NODE_ENV !== 'production' &&
+        (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'));
+
+      if (isConfigured || isLocalDev) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked: Origin '${origin}' is not authorized.`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

@@ -19,6 +19,8 @@ test.before(async () => {
   }
   const { ensureAdminExists } = require('../src/utils/bootstrapAdmin');
   await ensureAdminExists();
+  const { ensureShowsForCurrentDate } = require('../src/scripts/seedDynamicShows');
+  await ensureShowsForCurrentDate();
   await mongoose.connection.collection('payments').drop().catch(() => {});
 });
 
@@ -467,7 +469,8 @@ test('4. Movies & Theatres Search & Date Showtimes', async (t) => {
   });
 
   await t.test('Fetch showtimes by date', async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const { getLocalDateString } = require('../src/utils/dateUtils');
+    const today = getLocalDateString(0);
     const res = await request(app).get(`/api/v1/shows?date=${today}`);
     assert.strictEqual(res.status, 200);
     assert(res.body.data.shows.length > 0);
@@ -475,8 +478,11 @@ test('4. Movies & Theatres Search & Date Showtimes', async (t) => {
 });
 
 test('5. Seat Locking, Socket Sync & Duplicate Prevention', async (t) => {
-  const show = await Show.findOne({ status: 'scheduled' });
-  assert(show, 'Need a scheduled show for test');
+  const { getLocalDateString, isShowInPast } = require('../src/utils/dateUtils');
+  const today = getLocalDateString(0);
+  const scheduledShows = await Show.find({ status: 'scheduled', date: { $gte: today } }).sort({ date: 1 });
+  const show = scheduledShows.find((s) => !isShowInPast(s.date, s.startTime));
+  assert(show, 'Need an active upcoming scheduled show for test');
 
   // Clean any lingering test locks/bookings for isolation
   await SeatLock.deleteMany({});
@@ -525,7 +531,11 @@ test('5. Seat Locking, Socket Sync & Duplicate Prevention', async (t) => {
 });
 
 test('6. Checkout, Demo Payment, QR Ticket & Verification Flow', async (t) => {
-  const show = await Show.findOne({ status: 'scheduled' });
+  const { getLocalDateString, isShowInPast } = require('../src/utils/dateUtils');
+  const today = getLocalDateString(0);
+  const scheduledShows = await Show.find({ status: 'scheduled', date: { $gte: today } }).sort({ date: 1 });
+  const show = scheduledShows.find((s) => !isShowInPast(s.date, s.startTime));
+  assert(show, 'Need an active upcoming scheduled show for checkout test');
   const userEmail = `checkout_${Date.now()}@cineverse.test`;
   const reg = await request(app).post('/api/v1/auth/register').send({
     name: 'Checkout Tester',
