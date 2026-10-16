@@ -29,6 +29,7 @@ import WatchMoviePage from '../pages/customer/WatchMoviePage';
 // Auth Pages
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
+
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 
 // Admin Pages
@@ -58,6 +59,7 @@ const AppRoutes = () => {
         <Route path="watch" element={<WatchMoviePage />} />
         <Route path="trailers" element={<WatchMoviePage />} />
         <Route path="help" element={<HelpPage />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Protected Customer Routes (Restricted: Admins cannot book tickets) */}
         <Route
