@@ -126,8 +126,8 @@ const login = async (req, res, next) => {
       );
     }
 
-    const { email, password } = req.body;
-    const loginMode = req.body.loginMode || req.body.mode || 'user';
+    const { email, password } = req.body || {};
+    const loginMode = (req.body?.loginMode || req.body?.mode || 'user').toLowerCase().trim();
 
     const trimmedEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
     const trimmedPassword = typeof password === 'string' ? password : '';
@@ -147,9 +147,11 @@ const login = async (req, res, next) => {
       return errorResponse(res, 'Invalid email or password credentials', 401);
     }
 
+    const userRole = (user.role || '').toLowerCase().trim();
+
     // 3. Strict Server-Side Role Verification against requested loginMode
     if (loginMode === 'admin') {
-      if (user.role !== 'admin') {
+      if (userRole !== 'admin') {
         // Record audit event for suspicious admin login attempt
         try {
           await AuditEvent.create({
@@ -172,8 +174,8 @@ const login = async (req, res, next) => {
         );
       }
     } else if (loginMode === 'theatre') {
-      if (user.role !== 'theatre') {
-        if (user.role === 'admin') {
+      if (userRole !== 'theatre') {
+        if (userRole === 'admin') {
           return errorResponse(
             res,
             'This is an Administrator account. Please select "Admin Login" mode to sign in.',
@@ -188,15 +190,15 @@ const login = async (req, res, next) => {
       }
     } else {
       // Customer / User login mode: must strictly possess role 'user'
-      if (user.role !== 'user') {
-        if (user.role === 'admin') {
+      if (userRole !== 'user') {
+        if (userRole === 'admin') {
           return errorResponse(
             res,
             'This is an Administrator account. Please select "Admin Login" mode to sign in.',
             403
           );
         }
-        if (user.role === 'theatre') {
+        if (userRole === 'theatre') {
           return errorResponse(
             res,
             'This is a Theatre Partner account. Please select "Theatre" mode to sign in.',
@@ -211,7 +213,7 @@ const login = async (req, res, next) => {
       }
     }
 
-    const token = generateToken({ id: user._id, role: user.role });
+    const token = generateToken({ id: user._id, role: userRole });
 
     // Record successful login audit event for admins
     if (user.role === 'admin' || user.role === 'theatre') {

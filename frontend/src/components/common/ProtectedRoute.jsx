@@ -24,10 +24,13 @@ const ProtectedRoute = ({ children, allowedRoles = [], forbiddenMessage = '' }) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  const currentRole = (user?.role || '').toLowerCase().trim();
+  const normalizedAllowed = allowedRoles.map((r) => String(r).toLowerCase().trim());
+
   // If specific roles are required, verify database role
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+  if (allowedRoles.length > 0 && !normalizedAllowed.includes(currentRole)) {
     // If admin attempts customer-only booking page
-    if (user?.role === 'admin') {
+    if (currentRole === 'admin') {
       return (
         <Navigate
           to="/admin/dashboard"
@@ -41,8 +44,23 @@ const ProtectedRoute = ({ children, allowedRoles = [], forbiddenMessage = '' }) 
       );
     }
 
+    // If theatre staff attempts other pages
+    if (currentRole === 'theatre') {
+      return (
+        <Navigate
+          to="/theatre/dashboard"
+          state={{
+            accessDeniedMessage:
+              forbiddenMessage ||
+              'Theatre accounts are restricted to theatre management pages.',
+          }}
+          replace
+        />
+      );
+    }
+
     // If ordinary user attempts to access admin
-    if (user?.role === 'user') {
+    if (currentRole === 'user') {
       return (
         <Navigate
           to="/"

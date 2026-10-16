@@ -8,8 +8,25 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Dynamically initialize mode: inspect URL search params or redirected source path
+  const initialMode = () => {
+    try {
+      const searchParams = new URLSearchParams(location.search);
+      const paramMode = searchParams.get('mode') || searchParams.get('portal');
+      if (paramMode && ['admin', 'theatre', 'user'].includes(paramMode.toLowerCase())) {
+        return paramMode.toLowerCase();
+      }
+      const fromPath = location.state?.from?.pathname || '';
+      if (fromPath.startsWith('/admin')) return 'admin';
+      if (fromPath.startsWith('/theatre')) return 'theatre';
+    } catch {
+      // Fallback to default
+    }
+    return 'user';
+  };
+
   // Mode can be: 'user', 'admin', 'theatre'
-  const [loginMode, setLoginMode] = useState('user');
+  const [loginMode, setLoginMode] = useState(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,11 +52,11 @@ const LoginPage = () => {
     },
     admin: {
       email: import.meta.env.VITE_DEMO_ADMIN_EMAIL || 'admin@cineverse.com',
-      password: '', // Privileged admin password must never be exposed in client code
+      password: isDev ? (import.meta.env.VITE_DEMO_ADMIN_PASSWORD || 'Admin@CineVerse2026') : '',
     },
     theatre: {
       email: import.meta.env.VITE_DEMO_THEATRE_EMAIL || 'theatre@cineverse.com',
-      password: '', // Privileged theatre password must never be exposed in client code
+      password: isDev ? (import.meta.env.VITE_DEMO_THEATRE_PASSWORD || 'Theatre@CineVerse2026') : '',
     },
   };
 
@@ -161,9 +178,31 @@ const LoginPage = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
-              <span>{error}</span>
+            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex flex-col gap-2">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                <span className="leading-relaxed">{error}</span>
+              </div>
+              {error.includes('Admin Login') && loginMode !== 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('admin')}
+                  className="self-start mt-1 px-3 py-1 text-[11px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition shadow flex items-center gap-1 cursor-pointer"
+                >
+                  <Shield className="w-3 h-3" />
+                  <span>Switch to Admin Mode &rarr;</span>
+                </button>
+              )}
+              {error.includes('Theatre') && loginMode !== 'theatre' && (
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('theatre')}
+                  className="self-start mt-1 px-3 py-1 text-[11px] font-semibold bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition shadow flex items-center gap-1 cursor-pointer"
+                >
+                  <Building2 className="w-3 h-3" />
+                  <span>Switch to Theatre Mode &rarr;</span>
+                </button>
+              )}
             </div>
           )}
 

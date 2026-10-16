@@ -44,7 +44,10 @@ const requireRole = (...roles) => {
       return errorResponse(res, 'Authentication required.', 401);
     }
 
-    if (!roles.includes(req.user.role)) {
+    const userRole = (req.user.role || '').toLowerCase().trim();
+    const normalizedRoles = roles.map((r) => r.toLowerCase().trim());
+
+    if (!normalizedRoles.includes(userRole)) {
       return errorResponse(
         res,
         `Access forbidden. Required role: [${roles.join(', ')}]. Your account role is '${req.user.role}'.`,
@@ -64,12 +67,14 @@ const requireTheatreAccess = (req, res, next) => {
     return errorResponse(res, 'Authentication required.', 401);
   }
 
+  const userRole = (req.user.role || '').toLowerCase().trim();
+
   // Admin has access to all theatres
-  if (req.user.role === 'admin') {
+  if (userRole === 'admin') {
     return next();
   }
 
-  if (req.user.role === 'theatre') {
+  if (userRole === 'theatre') {
     const requestedTheatreId = req.params.theatreId || req.body.theatreId || req.query.theatreId;
     if (requestedTheatreId && req.user.assignedTheatre && req.user.assignedTheatre.toString() !== requestedTheatreId.toString()) {
       return errorResponse(res, 'Access denied. You can only manage your assigned theatre.', 403);
@@ -91,7 +96,9 @@ const requireCustomer = (req, res, next) => {
     return errorResponse(res, 'Authentication required.', 401);
   }
 
-  if (req.user.role === 'admin') {
+  const userRole = (req.user.role || '').toLowerCase().trim();
+
+  if (userRole === 'admin') {
     return errorResponse(
       res,
       'Admins are not allowed to book movie tickets. Please use a customer account.',
@@ -99,7 +106,7 @@ const requireCustomer = (req, res, next) => {
     );
   }
 
-  if (req.user.role !== 'user') {
+  if (userRole !== 'user') {
     return errorResponse(
       res,
       'Access forbidden. Only customer accounts can book movie tickets.',

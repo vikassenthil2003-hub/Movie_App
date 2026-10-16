@@ -25,6 +25,32 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  // Verify stored session and refresh user role on initial application mount
+  useEffect(() => {
+    const verifyStoredSession = async () => {
+      const storedToken = localStorage.getItem('cineverse_token');
+      if (!storedToken) return;
+
+      try {
+        const res = await api.get('/auth/profile');
+        const profileData = res?.data || res;
+        if (profileData && (profileData._id || profileData.id)) {
+          setUser(profileData);
+          localStorage.setItem('cineverse_user', JSON.stringify(profileData));
+        }
+      } catch (err) {
+        if (err?.status === 401 || err?.response?.status === 401) {
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem('cineverse_token');
+          localStorage.removeItem('cineverse_user');
+        }
+      }
+    };
+
+    verifyStoredSession();
+  }, []);
+
   /**
    * Unified Login
    * @param {string} email
@@ -43,9 +69,17 @@ export const AuthProvider = ({ children }) => {
       const payload = res.data || res;
       const receivedToken = payload.token;
       const receivedUser = payload.user;
+
+      // Synchronously write to localStorage before updating state and navigating
+      if (receivedToken) {
+        localStorage.setItem('cineverse_token', receivedToken);
+      }
+      if (receivedUser) {
+        localStorage.setItem('cineverse_user', JSON.stringify(receivedUser));
+      }
+
       setToken(receivedToken);
       setUser(receivedUser);
-      localStorage.setItem('cineverse_user', JSON.stringify(receivedUser));
       return receivedUser;
     } finally {
       setIsLoading(false);
@@ -86,9 +120,16 @@ export const AuthProvider = ({ children }) => {
       const payloadData = res.data || res;
       const receivedToken = payloadData.token;
       const receivedUser = payloadData.user;
+
+      if (receivedToken) {
+        localStorage.setItem('cineverse_token', receivedToken);
+      }
+      if (receivedUser) {
+        localStorage.setItem('cineverse_user', JSON.stringify(receivedUser));
+      }
+
       setToken(receivedToken);
       setUser(receivedUser);
-      localStorage.setItem('cineverse_user', JSON.stringify(receivedUser));
       return receivedUser;
     } finally {
       setIsLoading(false);
@@ -115,10 +156,10 @@ export const AuthProvider = ({ children }) => {
     token,
     role: user?.role || null,
     isAuthenticated: !!token && !!user,
-    isAdmin: user?.role === 'admin',
-    isCustomer: user?.role === 'user',
-    isTheatre: user?.role === 'theatre',
-    canBook: user?.role !== 'admin',
+    isAdmin: (user?.role || '').toLowerCase().trim() === 'admin',
+    isCustomer: (user?.role || '').toLowerCase().trim() === 'user',
+    isTheatre: (user?.role || '').toLowerCase().trim() === 'theatre',
+    canBook: (user?.role || '').toLowerCase().trim() !== 'admin',
     isLoading,
     login,
     register,
