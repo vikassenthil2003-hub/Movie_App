@@ -69,6 +69,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Apply rate limiting to API
 app.use('/api', apiLimiter);

@@ -59,7 +59,6 @@ const AppRoutes = () => {
         <Route path="watch" element={<WatchMoviePage />} />
         <Route path="trailers" element={<WatchMoviePage />} />
         <Route path="help" element={<HelpPage />} />
-        <Route path="/register" element={<Register />} />
 
         {/* Protected Customer Routes (Restricted: Admins cannot book tickets) */}
         <Route

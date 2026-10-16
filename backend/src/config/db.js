@@ -25,6 +25,10 @@ const setupConnectionListeners = () => {
 };
 
 const connectDB = async (maxRetries = 3, retryDelayMs = 2000) => {
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
   setupConnectionListeners();
 
   const primaryUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cineverse_ai';
